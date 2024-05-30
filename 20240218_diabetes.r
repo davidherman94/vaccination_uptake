@@ -749,6 +749,7 @@ missing_values_final_model <-
   (1 - nrow(flu_vaccine_complete_data_strata) / nrow(datos_ENHS_filter)) * 100
 
 model_2_dt_strata_less_60 <-
+  
   glm(
     Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
       No_medical_attention_economical_barriers + Social_support +
