@@ -701,6 +701,24 @@ significant_coeffs.over60 <- filter_significant_coeffs(model_1_strata_over.60, t
 significant_coeffs.over60
 
 ############ TESTING INTERACTION TERMS ################
+flu_vaccine_complete_data_strata <- datos_ENHS_filter %>%
+  select(
+    Flu_vaccine,
+    Sex,
+    Age_group,
+    Study_level,
+    Time_of_last_medical_visit,
+    Social_support,
+    No_medical_attention_economical_barriers,
+    Nurse_or_midwife_consultation,
+    Cold_medications
+  )
+
+##complete case analyses only
+flu_vaccine_complete_data_strata_sign <-
+  flu_vaccine_complete_data_strata[complete.cases(flu_vaccine_complete_data_strata),] ## n=1890
+
+
 # Time_of_last_medical_visit * Nurse_or_midwife_consultation (interaction)
 model_tlmvXnmc_int.60less <-
   glm(
@@ -708,7 +726,7 @@ model_tlmvXnmc_int.60less <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Time_of_last_medical_visit * Nurse_or_midwife_consultation +
       Cold_medications,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "< 60 years"),
     family = binomial(link = 'logit')
   )
 model_tlmvXnmc_int.60less %>% summary()
@@ -719,7 +737,7 @@ model_tlmvXnmc_int.60over <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Time_of_last_medical_visit * Nurse_or_midwife_consultation +
       Cold_medications,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "> 60 years"),
     family = binomial(link = 'logit')
   )
 
@@ -732,7 +750,7 @@ model_sexXss_int.60less <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Cold_medications +
       Sex * Social_support,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "< 60 years"),
     family = binomial(link = 'logit')
   )
 model_sexXss_int.60less %>% summary()
@@ -743,7 +761,7 @@ model_sexXss_int.60over <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Cold_medications +
       Sex * Social_support,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "> 60 years"),
     family = binomial(link = 'logit')
   )
 model_sexXss_int.60over %>% summary()
@@ -756,7 +774,7 @@ model_slXnmaeb_int.60less <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Cold_medications +
       Study_level * No_medical_attention_economical_barriers,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "< 60 years"),
     family = binomial(link = 'logit')
   )
 model_slXnmaeb_int.60less %>% summary()
@@ -767,7 +785,7 @@ model_slXnmaeb_int.60over <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Cold_medications +
       Study_level * No_medical_attention_economical_barriers,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "> 60 years"),
     family = binomial(link = 'logit')
   )
 model_slXnmaeb_int.60over %>% summary()
@@ -779,7 +797,7 @@ model_nmaebXss_int.60less <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Cold_medications +
       No_medical_attention_economical_barriers * Social_support,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "< 60 years"),
     family = binomial(link = 'logit')
   )
 model_nmaebXss_int.60less %>% summary()
@@ -790,7 +808,7 @@ model_nmaebXss_int.60over <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Cold_medications +
       No_medical_attention_economical_barriers * Social_support,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "> 60 years"),
     family = binomial(link = 'logit')
   )
 model_nmaebXss_int.60over %>% summary()
@@ -802,7 +820,7 @@ model_cmXtlmv_int.60less <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Cold_medications +
       Cold_medications * Time_of_last_medical_visit,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "< 60 years"),
     family = binomial(link = 'logit')
   )
 model_cmXtlmv_int.60less %>% summary()
@@ -813,12 +831,11 @@ model_cmXtlmv_int.60over <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Cold_medications +
       Cold_medications * Time_of_last_medical_visit,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "> 60 years"),
     family = binomial(link = 'logit')
   )
 model_cmXtlmv_int.60over %>% summary()
-table(flu_vaccine_complete_data_strata$Time_of_last_medical_visit, flu_vaccine_complete_data_strata$Flu_vaccine
-      )
+
 #######################################################
 ## Final stratified model with significant variables ##
 #######################################################
@@ -829,7 +846,7 @@ model_2_dt_strata_less_60 <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Cold_medications +
       Time_of_last_medical_visit * Nurse_or_midwife_consultation,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "< 60 years"),
     family = binomial(link = 'logit')
   )
 
@@ -839,7 +856,7 @@ model_2_dt_strata_over_60 <-
       No_medical_attention_economical_barriers + Social_support +
       Nurse_or_midwife_consultation + Cold_medications +
       Time_of_last_medical_visit * Nurse_or_midwife_consultation,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    data = subset(flu_vaccine_complete_data_strata_sign, Age_group == "> 60 years"),
     family = binomial(link = 'logit')
   )
 
