@@ -12,13 +12,9 @@ library(sjPlot)          # Data visualization and tables
 library(finalfit)        # Model fitting and reporting
 library(dplyr)           # Data manipulation
 library(rms)             # Regression modeling strategies
-library(meta)            # Meta-analysis tools
-library(metafor)         # Meta-analysis with R
 library(AICcmodavg)      # Model selection and multimodel inference
 library(ResourceSelection) # Goodness-of-fit tests
 library(readr)           # Reading rectangular text data
-library(survey)          # Analysis of survey data
-library(DataExplorer)    # Automated EDA
 library(skimr)           # Summary statistics
 library(visdat)          # Visualize missing data
 library(lattice)         # Multivariate data visualization
@@ -28,9 +24,6 @@ library(ggplot2)         # Data visualization
 library(ggdist)          # Visualizing distributions and uncertainty
 library(sf)              # Handling spatial data
 library(scales)          # Scale functions for visualization
-library(viridis)         # Color scales for visualization
-library(lme4)            # Mixed-effects models
-library(lmerTest)        # Mixed models with p-values
 library(sjstats)         # Statistical functions and summaries
 
 ### upload database ###
@@ -160,6 +153,7 @@ vaccination_rate <-
   (total_vaccinated / nrow(datos_ENHS_filter)) * 100
 
 ### Renaming categories ###
+# recoding age
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Age_group = factor(
     case_when(Age >= 15 & Age <= 59 ~ "< 60 years",
@@ -168,6 +162,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("> 60 years", "< 60 years")
   ))
 
+# recoding depressive severity
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Depressive_severity = factor(
     case_when(
@@ -176,11 +171,12 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
         Depressive_severity == 3 ~ "Moderate",
       Depressive_severity == 4 ~ "Moderately severe",
       Depressive_severity == 5 ~ "Severe",
-      Depressive_severity == 9 ~ NA_character_ ## 9 = no consta = NA
+      Depressive_severity == 9 ~ NA_character_ ## 9 = no answer
     ),
     levels = c("None", "Moderate", "Moedarately severe", "Severe")
   ))
 
+# recoding BMI
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(BMI_factor = factor(
     case_when(
@@ -188,10 +184,11 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
       BMI_factor == 2 ~ "Normal",
       BMI_factor == 3 ~ "Overweight",
       BMI_factor == 4 ~ "Obesity",
-      BMI_factor == 9 ~ NA_character_ ## 9 = no consta = NA
+      BMI_factor == 9 ~ NA_character_ ## 9, no answer
     )
   ))
 
+# recoding social class
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Social_class = factor(
     case_when(
@@ -200,11 +197,11 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
       Social_class == 4 ~ "Supervisors and technical skilled workers",
       Social_class == 5 ~ "Skilled and semi-skilled workers in the primary sector",
       Social_class == 6 ~ "Unskilled workers",
-      Social_class %in% c(8, 9) ~ NA_character_ ##8 AND 9, no sabe - no constesta
+      Social_class %in% c(8, 9) ~ NA_character_ ##8 AND 9, don't know - no answer
     )
   ))
 
-
+# recoding social support
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Social_support = factor(
     case_when(
@@ -212,12 +209,13 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
       Social_support == 2 ~ "Somewhat",
       Social_support == 3 |
         Social_support == 4 | Social_support == 5 ~ "Little or nothing",
-      Social_support %in% c(8, 9) ~ NA_character_
+      Social_support %in% c(8, 9) ~ NA_character_ ##8 AND 9, don't know - no answer
     ),
     levels = c("A lot", "Somewhat",
                "Little or nothing")
   ))
 
+# recoding health insurance
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Health_insurance = factor(
     case_when(
@@ -231,6 +229,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("Public", "Private", "No health insurance")
   ))
 
+# recodig pseudotherapy
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Pseudotherapy = factor(
     case_when(
@@ -240,7 +239,8 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
       TRUE ~ "Never"
     )
   ))
-
+ 
+# recoding marital status
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Marital_status = factor(
     case_when(
@@ -248,11 +248,12 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
       Marital_status == 2 ~ "Married",
       Marital_status == 3 ~ "Widowed",
       Marital_status == 4 | Marital_status == 5  ~ "Divorced",
-      Marital_status %in% c(8, 9) ~ NA_character_
+      Marital_status %in% c(8, 9) ~ NA_character_ ##8 AND 9, don't know - no answer
     ),
     levels = c("Single", "Married", "Widowed", "Divorced")
   ))
 
+# recoding cohabitation
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Cohabitation = factor(
     case_when(
@@ -263,15 +264,18 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("Yes", "No")
   ))
 
+# recoding nationality
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Spanish_nationality = factor(
     ifelse(Spanish_nationality == 1, "Yes", "No"),
     levels = c("Yes", "No")
   ))
 
+# recoding sex
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Sex = factor(ifelse(Sex == 1, "Men", "Women"), levels = c("Men", "Women")))
 
+# recoding autonomous community
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Autonomous_Comunity = factor(
     case_when(
@@ -298,6 +302,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     )
   ))
 
+# recoing alcohol
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Alcohol = factor(
     case_when(
@@ -317,6 +322,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     )
   ))
 
+# recoing tobacco
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Tobacco = factor(
     case_when(
@@ -327,6 +333,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("Yes", "No")
   ))
 
+# recoing physical activity
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Physical_activity = factor(
     case_when(
@@ -338,6 +345,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     )
   ))
 
+# recoding no medical attention due to economical barriers
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(No_medical_attention_economical_barriers = factor(
     case_when(
@@ -349,6 +357,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("No", "Yes")
   ))
 
+# recoding no medical attention due to waiting list
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(No_medical_attention_due_to_waiting_list_last_12_months = factor(
     case_when(
@@ -360,6 +369,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("Yes", "No")
   ))
 
+# recoding no medical attention due to transport barriers
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(No_medical_attention_due_to_transport_barriers = factor(
     case_when(
@@ -371,6 +381,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("Yes", "No")
   ))
 
+# recoding nurse or midwife consultation
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Nurse_or_midwife_consultation = factor(
     case_when(
@@ -381,6 +392,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("Yes", "No")
   ))
 
+# recoding cold medications
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Cold_medications = factor(
     case_when(
@@ -391,6 +403,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("Yes", "No")
   ))
 
+# recoding use of emergency services
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Use_of_emergency_services = factor(
     case_when(
@@ -401,6 +414,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("Yes", "No")
   ))
 
+# recoding hospitalization
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Hospitalization = factor(
     case_when(
@@ -411,6 +425,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("Yes", "No")
   ))
 
+# recoding flu vaccine
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Flu_vaccine = factor(
     case_when(
@@ -421,6 +436,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("Vaccinated", "Unvaccinated")
   ))
 
+# recoding health perception
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Health_perception = factor(
     case_when(
@@ -431,6 +447,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("Good", "Poor")
   ))
 
+# recoding study level
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Study_level = factor(
     case_when(
@@ -450,6 +467,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     )
   ))
 
+# recoding time of last medical visit
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Time_of_last_medical_visit = factor(
     case_when(
@@ -468,7 +486,6 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
   ))
 
 ###General Descriptive table###
-### p <0.2 variables###
 labels <- list(
   Sex = "Sex",
   Age_group = "Age group",
@@ -576,6 +593,7 @@ aggr_plot_VIM_diabe2 <-
     gap = 3,
     ylab = c("Histogram of missing data", "Pattern")
   )
+
 ###########################################
 #### IMPUTING MISSING VALUES WITH MICE ####
 ###########################################
@@ -612,10 +630,11 @@ aggr_plot_VIM_diabe2 <-
 # datos_ENHS_filter$Last_12_months_diabetes_imp_mice <- imputed_mice$Last_12_months_diabetes_imp_mice
 
 
-##########################################################
-########## MODEL manual backward regression #############
-#########################################################
-flu_vaccine_complete_data <- datos_ENHS_filter %>%
+
+#########################################################################
+########## MODEL manual backward regression stratified model #############
+#########################################################################
+flu_vaccine_complete_data_strata <- datos_ENHS_filter %>%
   select(
     Flu_vaccine,
     Sex,
@@ -635,125 +654,181 @@ flu_vaccine_complete_data <- datos_ENHS_filter %>%
     Nurse_or_midwife_consultation,
     Cold_medications,
     Use_of_emergency_services,
-    Hospitalization,
-    Autonomous_Comunity
+    Hospitalization
   )
 
 ##complete case analyses only
-flu_vaccine_complete_data <-
-  flu_vaccine_complete_data[complete.cases(flu_vaccine_complete_data), ] ## n=1890
+flu_vaccine_complete_data_strata <-
+  flu_vaccine_complete_data_strata[complete.cases(flu_vaccine_complete_data_strata),] ## n=1890
+
+## % of total missing values removed
+missing_values_final_model <-
+  (1 - nrow(flu_vaccine_complete_data_strata) / nrow(datos_ENHS_filter)) * 100
 
 ##all variables <0.2
-model_1_dt <-
+model_1_strata_less.60 <-
   glm(
-    Flu_vaccine ~  Sex + Age_group + Spanish_nationality + Autonomous_Comunity +
+    Flu_vaccine ~  Sex + Spanish_nationality +
       Marital_status + Study_level + Health_perception + Health_insurance +
       Time_of_last_medical_visit + Depressive_severity + Social_class +
       Social_support + Alcohol + Tobacco + No_medical_attention_economical_barriers +
       Nurse_or_midwife_consultation + Cold_medications + Use_of_emergency_services + Hospitalization,
-    data = flu_vaccine_complete_data,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
     family = binomial(link = 'logit')
   )
 
-model_1_dt %>% summary()
+model_1_strata_less.60 %>% summary()
+
+model_1_strata_over.60 <-
+  glm(
+    Flu_vaccine ~  Sex + Spanish_nationality +
+      Marital_status + Study_level + Health_perception + Health_insurance +
+      Time_of_last_medical_visit + Depressive_severity + Social_class +
+      Social_support + Alcohol + Tobacco + No_medical_attention_economical_barriers +
+      Nurse_or_midwife_consultation + Cold_medications + Use_of_emergency_services + Hospitalization,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    family = binomial(link = 'logit')
+  )
+
+model_1_strata_over.60 %>% summary()
 
 
 ##Keeping those <0.05 and sex
-filter_significant_coeffs <- function(model, threshold = 0.05) {
-  summary_data <- summary(model)
-  coeffs <- coef(summary_data)
-  p_values <- summary_data$coefficients[, "Pr(>|z|)"]
-  significant_coeffs <- coeffs[p_values < threshold, , drop = FALSE]
-  return(significant_coeffs)
-}
+significant_coeffs.less60 <- filter_significant_coeffs(model_1_strata_less.60, threshold = 0.05)
+significant_coeffs.less60
 
-significant_coeffs <-
-  filter_significant_coeffs(model_1_dt, threshold = 0.05)
-significant_coeffs
+significant_coeffs.over60 <- filter_significant_coeffs(model_1_strata_over.60, threshold = 0.05)
+significant_coeffs.over60
 
-
-model_2_dt <-
-  glm(
-    Flu_vaccine ~  Sex + Age_group + Study_level + Time_of_last_medical_visit +
-      No_medical_attention_economical_barriers + Social_support +
-      Nurse_or_midwife_consultation + Cold_medications,
-    data = flu_vaccine_complete_data,
-    family = binomial(link = 'logit')
-  )
-
-model_2_dt %>% tbl_regression(exponentiate = TRUE)
-
-
-##Adding interaction terms time and study_level with Age_group
-model_2_dt_int <-
-  glm(
-    Flu_vaccine ~  Sex + Age_group + Study_level + Age_group * Study_level + Time_of_last_medical_visit +
-      Age_group * Time_of_last_medical_visit + No_medical_attention_economical_barriers + Social_support +
-      Nurse_or_midwife_consultation + Cold_medications,
-    data = flu_vaccine_complete_data,
-    family = binomial(link = 'logit')
-  )
-
-model_2_dt_int %>% summary()
-
-table_summary_md2 <-
-  tbl_regression(
-    model_2_dt_int,
-    exponentiate = TRUE,
-    include = ##to exclude interaction terms from the table
-      c(
-        "Sex",
-        "Age_group",
-        "Study_level",
-        "Time_of_last_medical_visit",
-        "No_medical_attention_economical_barriers",
-        "Social_support",
-        "Nurse_or_midwife_consultation",
-        "Cold_medications"
-      ),
-    label = list(
-      Sex = "Sex",
-      Age_group = "Age group",
-      Study_level = "Study level",
-      Time_of_last_medical_visit = "Time of last medical visit",
-      No_medical_attention_economical_barriers = "No medical attention for economical barriers",
-      Social_support = "Social support",
-      Nurse_or_midwife_consultation = "Nurse or midwife consultation",
-      Cold_medications = "Cold medications"
-    )
-  ) %>%
-  bold_labels() %>%
-  italicize_levels()
-
-table_summary_md2
-
-#######################################################
-## Final stratified model with significant variables ##
-#######################################################
-
-flu_vaccine_complete_data_strata <- datos_ENHS_filter %>%
-  select(
-    Flu_vaccine,
-    Sex,
-    Age_group,
-    Study_level,
-    Time_of_last_medical_visit,
-    Social_support,
-    No_medical_attention_economical_barriers,
-    Nurse_or_midwife_consultation,
-    Cold_medications
-  )
-flu_vaccine_complete_data_strata <-
-  flu_vaccine_complete_data_strata[complete.cases(flu_vaccine_complete_data_strata), ] ## n=2113
-missing_values_final_model <-
-  (1 - nrow(flu_vaccine_complete_data_strata) / nrow(datos_ENHS_filter)) * 100
-
-model_2_dt_strata_less_60 <-
-  
+############ TESTING INTERACTION TERMS ################
+# Time_of_last_medical_visit * Nurse_or_midwife_consultation (interaction)
+model_tlmvXnmc_int.60less <-
   glm(
     Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
       No_medical_attention_economical_barriers + Social_support +
-      Nurse_or_midwife_consultation + Cold_medications,
+      Nurse_or_midwife_consultation + Time_of_last_medical_visit * Nurse_or_midwife_consultation +
+      Cold_medications,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
+    family = binomial(link = 'logit')
+  )
+model_tlmvXnmc_int.60less %>% summary()
+
+model_tlmvXnmc_int.60over <-
+  glm(
+    Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
+      No_medical_attention_economical_barriers + Social_support +
+      Nurse_or_midwife_consultation + Time_of_last_medical_visit * Nurse_or_midwife_consultation +
+      Cold_medications,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    family = binomial(link = 'logit')
+  )
+
+model_tlmvXnmc_int.60over %>% summary()
+
+# Sex x Social_support (no interaction)
+model_sexXss_int.60less <-
+  glm(
+    Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
+      No_medical_attention_economical_barriers + Social_support +
+      Nurse_or_midwife_consultation + Cold_medications +
+      Sex * Social_support,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
+    family = binomial(link = 'logit')
+  )
+model_sexXss_int.60less %>% summary()
+
+model_sexXss_int.60over <-
+  glm(
+    Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
+      No_medical_attention_economical_barriers + Social_support +
+      Nurse_or_midwife_consultation + Cold_medications +
+      Sex * Social_support,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    family = binomial(link = 'logit')
+  )
+model_sexXss_int.60over %>% summary()
+
+
+# Study_level x No_medical_attention_economical_barriers (no interaction)
+model_slXnmaeb_int.60less <-
+  glm(
+    Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
+      No_medical_attention_economical_barriers + Social_support +
+      Nurse_or_midwife_consultation + Cold_medications +
+      Study_level * No_medical_attention_economical_barriers,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
+    family = binomial(link = 'logit')
+  )
+model_slXnmaeb_int.60less %>% summary()
+
+model_slXnmaeb_int.60over <-
+  glm(
+    Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
+      No_medical_attention_economical_barriers + Social_support +
+      Nurse_or_midwife_consultation + Cold_medications +
+      Study_level * No_medical_attention_economical_barriers,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    family = binomial(link = 'logit')
+  )
+model_slXnmaeb_int.60over %>% summary()
+
+# No_medical_attention_economical_barriers x Social_support (no interactio)
+model_nmaebXss_int.60less <-
+  glm(
+    Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
+      No_medical_attention_economical_barriers + Social_support +
+      Nurse_or_midwife_consultation + Cold_medications +
+      No_medical_attention_economical_barriers * Social_support,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
+    family = binomial(link = 'logit')
+  )
+model_nmaebXss_int.60less %>% summary()
+
+model_nmaebXss_int.60over <-
+  glm(
+    Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
+      No_medical_attention_economical_barriers + Social_support +
+      Nurse_or_midwife_consultation + Cold_medications +
+      No_medical_attention_economical_barriers * Social_support,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    family = binomial(link = 'logit')
+  )
+model_nmaebXss_int.60over %>% summary()
+
+# Cold_medications x Time_of_last_medical_visit (no interaction)
+model_cmXtlmv_int.60less <-
+  glm(
+    Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
+      No_medical_attention_economical_barriers + Social_support +
+      Nurse_or_midwife_consultation + Cold_medications +
+      Cold_medications * Time_of_last_medical_visit,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
+    family = binomial(link = 'logit')
+  )
+model_cmXtlmv_int.60less %>% summary()
+
+model_cmXtlmv_int.60over <-
+  glm(
+    Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
+      No_medical_attention_economical_barriers + Social_support +
+      Nurse_or_midwife_consultation + Cold_medications +
+      Cold_medications * Time_of_last_medical_visit,
+    data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
+    family = binomial(link = 'logit')
+  )
+model_cmXtlmv_int.60over %>% summary()
+table(flu_vaccine_complete_data_strata$Time_of_last_medical_visit, flu_vaccine_complete_data_strata$Flu_vaccine
+      )
+#######################################################
+## Final stratified model with significant variables ##
+#######################################################
+## final model with <0.05 p value + sex + age group as main confounders and interaction term
+model_2_dt_strata_less_60 <-
+  glm(
+    Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
+      No_medical_attention_economical_barriers + Social_support +
+      Nurse_or_midwife_consultation + Cold_medications +
+      Time_of_last_medical_visit * Nurse_or_midwife_consultation,
     data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
     family = binomial(link = 'logit')
   )
@@ -762,7 +837,8 @@ model_2_dt_strata_over_60 <-
   glm(
     Flu_vaccine ~  Sex + Study_level + Time_of_last_medical_visit +
       No_medical_attention_economical_barriers + Social_support +
-      Nurse_or_midwife_consultation + Cold_medications,
+      Nurse_or_midwife_consultation + Cold_medications +
+      Time_of_last_medical_visit * Nurse_or_midwife_consultation,
     data = subset(flu_vaccine_complete_data_strata, Age_group == "> 60 years"),
     family = binomial(link = 'logit')
   )
@@ -874,62 +950,28 @@ combined_table_FINAL %>%
 # 
 # model_2_dt_mice %>% summary()
 
-## INTERACTION TESTING ##
-# Study_level and social class
-model_str_int <-
-  glm(
-    Flu_vaccine ~  Sex + Age_group + Study_level + Social_class + Social_class *
-      Study_level,
-    data = subset(flu_vaccine_complete_data_strata, Age_group == "< 60 years"),
-    family = binomial(link = 'logit')
-  )
-
-model_str_int %>% summary()
-
-## Emergency and hospitalization
-model_3_int <-
-  glm(
-    Flu_vaccine ~  Sex + Age_group + Use_of_emergency_services + Hospitalization
-    + Use_of_emergency_services * Hospitalization,
-    data = flu_vaccine_complete_data,
-    family = binomial(link = 'logit')
-  )
-
-model_3_int %>% summary()
-
-## services uses and time to visit 
-model_4_int <-
-  glm(
-    Flu_vaccine ~  Sex + Age_group + Use_of_emergency_services +  Hospitalization +
-      Time_of_last_medical_visit + Use_of_emergency_services *
-      Hospitalization +
-      Time_of_last_medical_visit * Use_of_emergency_services +  Time_of_last_medical_visit *
-      Hospitalization,
-    data = flu_vaccine_complete_data,
-    family = binomial(link = 'logit')
-  )
-
-model_4_int %>% summary()
 
 ######################################
 ####Testing fitness of final model####
 ######################################
 ##Maximum likelihood##
-logLik(model_2_dt_int) #better
+# interaction model vs no interaction final model
+logLik(model_tlmvXnmc_int.60less) #better
+logLik(model_tlmvXnmc_int.60over) #better
 logLik(model_2_dt_strata_less_60)
 logLik(model_2_dt_strata_over_60)
 
 #AIC#
-model_2_dt_int$aic #almost similar
-model_2_dt$aic
+model_tlmvXnmc_int.60less$aic #better
+model_tlmvXnmc_int.60over$aic #better
+model_2_dt_strata_less_60$aic
+model_2_dt_strata_over_60$aic
 
 #BIC#
-
-BIC(model_2_dt_int)  #better
-BIC(model_2_dt)
-
-#LRT#
-lrtest(model_2_dt, model_2_dt_int) ##first significantly better
+BIC(model_tlmvXnmc_int.60less)  #better
+BIC(model_tlmvXnmc_int.60over)  #better
+BIC(model_2_dt_strata_less_60)
+BIC(model_2_dt_strata_over_60)
 
 ########################
 ###MODEL ASSUMPTIONS####
@@ -937,9 +979,8 @@ lrtest(model_2_dt, model_2_dt_int) ##first significantly better
 ##Collinearity
 #No collinearity
 library(car)
-vif(model_2_dt_strata_less_60) ##VIF controlled without interaction terms
 vif(model_2_dt_strata_over_60) ##VIF controlled without interaction terms
-
+vif(model_2_dt_strata_over_60) ##VIF controlled without interaction terms
 
 #######################
 ####MAP COVERAGE#######
@@ -982,12 +1023,8 @@ abbreviations <- c(
 
 prev_ccaa_flu
 
-match_ccaa <-
-  match(prev_ccaa_flu$Autonomous_Comunity, ccaa$NAMEUNIT)
+match_ccaa <- match(prev_ccaa_flu$Autonomous_Comunity, ccaa$NAMEUNIT)
 prev_ccaa_flu$geom <- ccaa$geometry[match_ccaa]
-
-prev_ccaa_flu <- prev_ccaa_flu %>%
-  mutate(Autonomous_Comunity = recode(Autonomous_Comunity, !!!abbreviations))
 
 map_diab_flu <- ggplot(data = prev_ccaa_flu) +
   geom_sf(aes(fill = coverage, geometry = geom)) +
