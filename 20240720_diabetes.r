@@ -239,7 +239,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
       TRUE ~ "Never"
     )
   ))
- 
+
 # recoding marital status
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Marital_status = factor(
@@ -599,7 +599,7 @@ aggr_plot_VIM_diabe2 <-
 ###########################################
 
 # diabetes_mice_rec <- mice(datos_ENHS_filter, m=5, maxit=50, meth='pmm',seed=500)
-# 
+#
 # imputed_mice_bmi <- complete(diabetes_mice_rec)
 # imputed_social_sup <- complete(diabetes_mice_rec)
 # imputed_social_class <- complete(diabetes_mice_rec)
@@ -608,7 +608,7 @@ aggr_plot_VIM_diabe2 <-
 # imputed_diab_medi <- complete(diabetes_mice_rec)
 # imputed_medic_diag <- complete(diabetes_mice_rec)
 # imputed_last_12 <- complete(diabetes_mice_rec)
-# 
+#
 # #only for those with >0,1 % of missing values
 # colnames(imputed_mice_bmi)[colnames(imputed_mice_bmi) == "BMI_factor"] <- "BMI_factor_imp_mice"
 # colnames(imputed_social_sup)[colnames(imputed_social_sup) == "Social_support"] <- "Social_support_imp_mice"
@@ -618,8 +618,8 @@ aggr_plot_VIM_diabe2 <-
 # colnames(imputed_diab_medi)[colnames(imputed_diab_medi) == "Diabetes_medications"] <- "Diabetes_medications_imp_mice"
 # colnames(imputed_medic_diag)[colnames(imputed_medic_diag) == "Medical_diagnosis_diabetes"] <- "Medical_diagnosis_diabetes_imp_mice"
 # colnames(imputed_last_12)[colnames(imputed_last_12) == "Last_12_months_diabetes"] <- "Last_12_months_diabetes_imp_mice"
-# 
-# 
+#
+#
 # datos_ENHS_filter$BMI_factor_imp_mice <- imputed_mice$BMI_factor_imp_mice
 # datos_ENHS_filter$Social_support_imp_mice <- imputed_mice$Social_support_imp_mice
 # datos_ENHS_filter$Social_class_imp_mice <- imputed_mice$Social_class_imp_mice
@@ -694,6 +694,13 @@ model_1_strata_over.60 %>% summary()
 
 
 ##Keeping those <0.05 and sex
+filter_significant_coeffs <- function(model, threshold = 0.05) {
+  summary_data <- summary(model)
+  coeffs <- coef(summary_data)
+  p_values <- summary_data$coefficients[, "Pr(>|z|)"]
+  significant_coeffs <- coeffs[p_values < threshold, , drop = FALSE]
+  return(significant_coeffs)
+}
 significant_coeffs.less60 <- filter_significant_coeffs(model_1_strata_less.60, threshold = 0.05)
 significant_coeffs.less60
 
@@ -924,6 +931,71 @@ combined_table_FINAL %>%
   writexl::write_xlsx("table_2.xlsx")
 
 
+#####################################################################
+######################## UNADJUSTED MODEL ############################
+######################################################################
+
+# Function to fit simple logistic models and extract unadjusted ORs
+get_unadjusted_or <- function(data, outcome, variables) {
+  results <- lapply(variables, function(var) {
+    # Fit simple logistic model
+    formula <- as.formula(paste(outcome, "~", var))
+    model <- glm(formula, data = data, family = binomial(link = 'logit'))
+
+    # Create summary table
+    tbl <- tbl_regression(model, exponentiate = TRUE, include = var)
+
+    # Add variable label
+    tbl <- tbl %>%
+      bold_labels() %>%
+      italicize_levels()
+
+    return(tbl)
+  })
+
+  # Combine all tables into one
+  combined_table <- tbl_stack(results)
+  return(combined_table)
+}
+
+# Independent variables
+variables <- c(
+  "Sex",
+  "Study_level",
+  "Time_of_last_medical_visit",
+  "No_medical_attention_economical_barriers",
+  "Social_support",
+  "Nurse_or_midwife_consultation",
+  "Cold_medications"
+)
+
+# Outcome variable
+outcome <- "Flu_vaccine"
+
+# Stratified data by age group
+data_less_60 <- subset(flu_vaccine_complete_data_strata_sign, Age_group == "< 60 years")
+data_over_60 <- subset(flu_vaccine_complete_data_strata_sign, Age_group == "> 60 years")
+
+# Obtain unadjusted ORs for each age group
+unadjusted_or_less_60 <- get_unadjusted_or(data_less_60, outcome, variables)
+unadjusted_or_over_60 <- get_unadjusted_or(data_over_60, outcome, variables)
+
+# Combine tables
+combined_unadjusted_table <- tbl_merge(
+  list(unadjusted_or_less_60, unadjusted_or_over_60),
+  tab_spanner = c("< 60 years", "> 60 years")
+)
+
+# Export the table
+combined_unadjusted_table %>%
+  as_tibble() %>%
+  writexl::write_xlsx("unadjusted_or_table.xlsx")
+
+# Print the table to the console (optional)
+print(combined_unadjusted_table)
+
+
+
 #####################################
 ###### MODEL WITH MICE IMPUTATIONS###
 ##############################################
@@ -937,14 +1009,14 @@ combined_table_FINAL %>%
 #          No_medical_attention_economical_barriers,
 #          Nurse_or_midwife_consultation, Cold_medications_imp_mice,Use_of_emergency_services,
 #          Hospitalization)
-# 
+#
 # model_1_dt_mice <- glm(Flu_vaccine ~  Sex + Age_group + Spanish_nationality + BMI_factor_imp_mice +
 #                     Marital_status + Study_level + Health_perception + Health_insurance +
 #                     Time_of_last_medical_visit + Depressive_severity_imp_mice + Social_support_imp_mice +
 #                     Social_class_imp_mice + Alcohol + Tobacco + No_medical_attention_economical_barriers +
 #                     Nurse_or_midwife_consultation + Cold_medications_imp_mice + Use_of_emergency_services+ Hospitalization,
 #                   data = flu_vaccine_complete_data_mice, family = binomial(link = 'logit'))
-# 
+#
 # model_1_dt_mice %>% summary()
 
 ##Keeping those <0.05 and sex
@@ -955,16 +1027,16 @@ combined_table_FINAL %>%
 #   significant_coeffs <- coeffs[p_values < threshold, , drop = FALSE]
 #   return(significant_coeffs)
 # }
-# 
+#
 # significant_coeffs <- filter_significant_coeffs(model_1_dt_mice, threshold = 0.05)
 # significant_coeffs
-# 
+#
 # # model 2 with MICE imputations
 # model_2_dt_mice <- glm(Flu_vaccine ~  Sex + Age_group + Study_level + Time_of_last_medical_visit +
 #                          Depressive_severity_imp_mice + No_medical_attention_economical_barriers
 #                        + Social_support_imp_mice + Nurse_or_midwife_consultation + Cold_medications_imp_mice,
 #                   data = flu_vaccine_complete_data_mice, family = binomial(link = 'logit'))
-# 
+#
 # model_2_dt_mice %>% summary()
 
 
@@ -1110,4 +1182,3 @@ ggsave(
   height = 560 / 300,
   dpi = 300
 )
-
