@@ -162,6 +162,21 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     levels = c("> 60 years", "< 60 years")
   ))
 
+# age revisors suggestions analyses per groups
+datos_ENHS_filter <- datos_ENHS_filter %>%
+  mutate(Age_group_recod = factor(
+    case_when(Age >= 15 & Age <= 19 ~ "15 - 19 years",
+              Age >= 20 & Age <= 39 ~ "20 - 39 years",
+              Age >= 40 & Age <= 59 ~ "40 - 59 years",
+              Age >= 60 ~ "> 60 years",
+              TRUE ~ NA),
+    levels = c("15 - 19 years", 
+               "20 - 39 years", 
+               "40 - 59 years", 
+               "> 60 years")
+  ))
+
+
 # recoding depressive severity
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Depressive_severity = factor(
@@ -489,6 +504,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
 labels <- list(
   Sex = "Sex",
   Age_group = "Age group",
+  Age_group_recod = "Age groups",
   Spanish_nationality = "Spanish nationality",
   Autonomous_Comunity = "Autonomous Community",
   Marital_status = "Marital status",
@@ -558,6 +574,56 @@ table_1 <- table_diabetes_prev_strata %>% as.data.frame()
 
 # Write the list of data frames to an Excel file
 write_xlsx(table_1, "table_diabetes_prev_strata.xlsx")
+
+
+
+#table_diabetes_prev_strata#
+table_diabetes_prev_rev <-
+  datos_ENHS_filter %>%
+  filter(!is.na(Age_group_recod)) %>%
+  dplyr::select(
+    Flu_vaccine,
+    Sex,
+    Age_group_recod,
+    Spanish_nationality,
+    Marital_status,
+    Study_level,
+    Health_perception,
+    Health_insurance,
+    Time_of_last_medical_visit,
+    Depressive_severity,
+    Social_class,
+    Social_support,
+    Alcohol,
+    Tobacco,
+    No_medical_attention_economical_barriers,
+    Nurse_or_midwife_consultation,
+    Cold_medications,
+    Use_of_emergency_services,
+    Hospitalization
+  ) %>%
+  droplevels() %>%
+  tbl_summary(
+        by = Flu_vaccine,
+        type = all_dichotomous() ~ "categorical",
+        percent = "row",
+        missing = "no",
+        label = labels
+      ) %>%
+      add_overall() %>%
+      add_p() %>%
+      add_ci() %>%
+      modify_header(label = "**Co-variables**") %>%
+      modify_spanning_header(all_stat_cols() ~ "**Flu vaccination in diabetic population**") %>%
+      bold_labels() %>%
+      italicize_levels() %>%
+      modify_footnote(p.value ~ "χ² and Fisher's exact tests")
+
+table_1_ages <- table_diabetes_prev_rev %>% as.data.frame()
+
+# Write the list of data frames to an Excel file
+write_xlsx(table_1_ages, "table_diabetes_prev_rev.xlsx")
+
 
 #################################
 ######### MISSING VALUES ##########
