@@ -1252,3 +1252,26 @@ ggsave(
   height = 560 / 300,
   dpi = 300
 )
+
+
+### Statistical power ###
+# Install and load the necessary package
+library(pwr)
+
+# Define the parameters
+P1 <- 0.47  # Proportion of unvaccinated individuals in the sample
+P0 <- 0.50  # Reference proportion (e.g., 50%)
+
+# Calculate Cohen's h for proportions
+h <- ES.h(P1, P0)
+
+# Perform the power calculation
+power_calculation <- pwr.p.test(
+  h = h,
+  n = 2193,
+  sig.level = 0.05,
+  alternative = "two.sided"
+)
+
+# Display the results
+print(power_calculation)
