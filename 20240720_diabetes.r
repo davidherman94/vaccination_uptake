@@ -546,6 +546,7 @@ table_diabetes_prev_strata <-
       ) %>%
       add_overall() %>%
       add_p() %>%
+      add_ci() %>%
       modify_header(label = "**Co-variables**") %>%
       modify_spanning_header(all_stat_cols() ~ "**Flu vaccination in diabetic population**") %>%
       bold_labels() %>%
@@ -553,7 +554,10 @@ table_diabetes_prev_strata <-
       modify_footnote(p.value ~ "χ² and Fisher's exact tests")
   )
 
-table_diabetes_prev_strata
+table_1 <- table_diabetes_prev_strata %>% as.data.frame()
+
+# Write the list of data frames to an Excel file
+write_xlsx(table_1, "table_diabetes_prev_strata.xlsx")
 
 #################################
 ######### MISSING VALUES ##########
