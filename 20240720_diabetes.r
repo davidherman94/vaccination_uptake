@@ -134,7 +134,9 @@ total_na <- sum(rowSums(is.na(datos_ENHS_filter[, ])) > 0)
 total_filtros <- nrow(datos_ENHS_filter)
 porcentaje_total_na <- (total_na / total_filtros) * 100
 
+#############################
 ###Descriptive statistics###
+############################
 mean_age <- mean(datos_ENHS_filter$Age, na.rm = TRUE)
 sd_age <- sd(datos_ENHS_filter$Age, na.rm = TRUE)
 n_age <- length(datos_ENHS_filter$Age)
@@ -145,14 +147,41 @@ z_score <- qnorm(0.975)
 lower_CI <- mean_age - z_score * se_age
 upper_CI <- mean_age + z_score * se_age
 
-### % of vaccinated population
-total_vaccinated <- datos_ENHS_filter %>%
+### % diabetic population vaccinated ###
+total_vaccinated_diab <- datos_ENHS_filter %>%
   dplyr::filter(Flu_vaccine == "Vaccinated") %>%
   nrow()
-vaccination_rate <-
-  (total_vaccinated / nrow(datos_ENHS_filter)) * 100
 
+vaccination_rate_diab<-
+  (total_vaccinated_diab / nrow(datos_ENHS_filter)) * 100
+
+
+### % total (including diabetic) population vaccinated ###
+total_vaccinated <- datos_ENHS_filter_pre %>%
+  dplyr::filter(Flu_vaccine == 1) %>%
+  nrow()
+
+vaccination_rate_total <-
+  (total_vaccinated / nrow(datos_ENHS_filter_pre)) * 100
+
+
+### % total (excluding diabetic) population vaccinated ###
+##keeing only diabetic population with data
+datos_ENHS_filter_no_diab <- datos_ENHS_filter_pre %>%
+  dplyr::filter(Diabetes_medications != 1 |
+                  Ever_diabetes != 1 |
+                  Last_12_months_diabetes != 1)
+
+total_vaccinated_excl <- datos_ENHS_filter_no_diab %>%
+  dplyr::filter(Flu_vaccine == 1) %>%
+  nrow()
+
+vaccination_rate_excl <-
+  (total_vaccinated_excl / nrow(datos_ENHS_filter_no_diab)) * 100
+
+###########################
 ### Renaming categories ###
+###########################
 # recoding age
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Age_group = factor(
