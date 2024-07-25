@@ -188,7 +188,7 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
     case_when(Age >= 15 & Age <= 59 ~ "< 60 years",
               Age >= 60             ~ "> 60 years",
               TRUE ~ NA),
-    levels = c("> 60 years", "< 60 years")
+    levels = c("< 60 years", "> 60 years")
   ))
 
 # age revisors suggestions analyses per groups
@@ -512,20 +512,33 @@ datos_ENHS_filter <- datos_ENHS_filter %>%
   ))
 
 # recoding time of last medical visit
+# datos_ENHS_filter <- datos_ENHS_filter %>%
+#   mutate(Time_of_last_medical_visit = factor(
+#     case_when(
+#       Time_of_last_medical_visit == 1 ~ "In the last 4 weeks",
+#       Time_of_last_medical_visit == 2 ~ "Between 4 weeks and 12 months",
+#       Time_of_last_medical_visit == 3 ~ "12 months or more ago",
+#       Time_of_last_medical_visit == 4 ~  NA,
+#       TRUE ~ NA_character_
+#     ),
+#     levels = c(
+#       "In the last 4 weeks",
+#       "Between 4 weeks and 12 months",
+#       "12 months or more ago",
+#       "Never"
+#     )
+#   ))
+
 datos_ENHS_filter <- datos_ENHS_filter %>%
   mutate(Time_of_last_medical_visit = factor(
     case_when(
       Time_of_last_medical_visit == 1 ~ "In the last 4 weeks",
-      Time_of_last_medical_visit == 2 ~ "Between 4 weeks and 12 months",
-      Time_of_last_medical_visit == 3 ~ "12 months or more ago",
-      Time_of_last_medical_visit == 4 ~  NA,
+      Time_of_last_medical_visit %in% c(2, 3) ~ "More_than_4_weeks",
       TRUE ~ NA_character_
     ),
     levels = c(
       "In the last 4 weeks",
-      "Between 4 weeks and 12 months",
-      "12 months or more ago",
-      "Never"
+      "More_than_4_weeks"
     )
   ))
 
@@ -607,7 +620,7 @@ write_xlsx(table_1, "table_diabetes_prev_strata.xlsx")
 
 
 #table_diabetes_prev_strata#
-table_diabetes_prev_rev <-
+table_diabetes_prev_with_age_groups <-
   datos_ENHS_filter %>%
   filter(!is.na(Age_group_recod)) %>%
   dplyr::select(
@@ -648,7 +661,7 @@ table_diabetes_prev_rev <-
       italicize_levels() %>%
       modify_footnote(p.value ~ "χ² and Fisher's exact tests")
 
-table_1_ages <- table_diabetes_prev_rev %>% as.data.frame()
+table_1_ages <- table_diabetes_prev_with_age_groups %>% as.data.frame()
 
 # Write the list of data frames to an Excel file
 write_xlsx(table_1_ages, "table_diabetes_prev_rev.xlsx")
@@ -1021,7 +1034,7 @@ table_summary_over_60 <- tbl_regression(
 # merge the tables
 combined_table_FINAL <- tbl_merge(
   list(table_summary_less_60, table_summary_over_60),
-  tab_spanner = c("< 60 years", "> 60 years")
+  tab_spanner = c("Under 60 years", "Over 60 years")
 )
 
 # export the table
