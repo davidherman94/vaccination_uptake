@@ -127,6 +127,23 @@ datos_ENHS_filter <- datos_ENHS_filter_pre %>%
                   Ever_diabetes == 1 |
                   Last_12_months_diabetes == 1) # "Diabetes_medications" = "P87_19a", "Ever_diabetes" = "G25a_12" "Last_12_months_diabetes" = "G25b_12",
 
+# Number of participants Diabetes_medications == 1
+num_Diabetes_medications <- nrow(datos_ENHS_filter_pre %>%
+                                   dplyr::filter(Diabetes_medications == 1))
+
+# Number of of participants Ever_diabetes == 1
+num_Ever_diabetes <- nrow(datos_ENHS_filter_pre %>%
+                            dplyr::filter(Ever_diabetes == 1))
+
+# Number of participants Last_12_months_diabetes == 1
+num_Last_12_months_diabetes <- nrow(datos_ENHS_filter_pre %>%
+                                      dplyr::filter(Last_12_months_diabetes == 1))
+
+# Print the results
+num_Diabetes_medications
+num_Ever_diabetes
+num_Last_12_months_diabetes
+
 ##NA values in database principal
 na_counts <- sapply(datos_ENHS_filter[, ], function(x)
   sum(is.na(x)))
@@ -154,7 +171,6 @@ total_vaccinated_diab <- datos_ENHS_filter %>%
 
 vaccination_rate_diab<-
   (total_vaccinated_diab / nrow(datos_ENHS_filter)) * 100
-
 
 ### % total (including diabetic) population vaccinated ###
 total_vaccinated <- datos_ENHS_filter_pre %>%
