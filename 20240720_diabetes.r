@@ -144,6 +144,28 @@ num_Diabetes_medications
 num_Ever_diabetes
 num_Last_12_months_diabetes
 
+
+# Crear tablas de contingencia para cada variable en relación con flu_vaccine
+table_Diabetes_medications <- datos_ENHS_filter_pre %>%
+  group_by(Flu_vaccine) %>%
+  summarise(Diabetes_medications = sum(Diabetes_medications == 1,na.rm = TRUE))
+
+table_Ever_diabetes <- datos_ENHS_filter_pre %>%
+  group_by(Flu_vaccine) %>%
+  summarise(Ever_diabetes = sum(Ever_diabetes == 1, na.rm = TRUE))
+
+table_Last_12_months_diabetes <- datos_ENHS_filter_pre %>%
+  group_by(Flu_vaccine) %>%
+  summarise(Last_12_months_diabetes = sum(Last_12_months_diabetes == 1, na.rm = TRUE))
+
+# Combinar las tablas en una sola
+final_table <- table_Diabetes_medications %>%
+  left_join(table_Ever_diabetes, by = "Flu_vaccine") %>%
+  left_join(table_Last_12_months_diabetes, by = "Flu_vaccine")
+
+# Mostrar la tabla final
+print(final_table)
+
 ##NA values in database principal
 na_counts <- sapply(datos_ENHS_filter[, ], function(x)
   sum(is.na(x)))
